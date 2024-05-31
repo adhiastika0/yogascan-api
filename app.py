@@ -1,22 +1,31 @@
-# Importing flask module in the project is mandatory
-# An object of Flask class is our WSGI application.
-from flask import Flask
+from flask import Flask, request
+from flask_restful import Resource, Api
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-# Flask constructor takes the name of 
-# current module (__name__) as argument.
+# Initialize Firebase app
+cred = credentials.Certificate("./serviceAccount.json")
+firebase_admin.initialize_app(cred)
+
+# Firestore client
+db = firestore.client()
+
+# Flask application
 app = Flask(__name__)
+api = Api(app)
 
-# The route() function of the Flask class is a decorator, 
-# which tells the application which URL should call 
-# the associated function.
-@app.route('/')
-# ‘/’ URL is bound with hello_world() function.
-def hello_world():
-    return 'Hello World'
+class HelloWorld(Resource):
+    def post(self):
+        try:
+            # Add a document to the 'user' collection
+            db.collection('user').add({'uid': 'random', 'username': 'Adhi', 'profile_picture': 'test'})
+            return {"message": "Document added successfully"}, 201
+        except Exception as e:
+            return {"message": "An error occurred: " + str(e)}, 500
 
-# main driver function
+# Add resource to API
+api.add_resource(HelloWorld, '/')
+
+# Main driver function
 if __name__ == '__main__':
-
-    # run() method of Flask class runs the application 
-    # on the local development server.
-    app.run()
+    app.run(debug=True)
