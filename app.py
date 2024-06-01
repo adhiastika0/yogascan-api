@@ -50,11 +50,80 @@ class Pose(Resource):
                 return {"message": "Pose not found"}, 404
         except Exception as e:
             return {"message": "An error occurred: " + str(e)}, 500
+        
+class getFavorite(Resource):
+    def get(self, uid):
+        try:
+            favorite_ref = db.collection('favorite').where('uid', '==', uid).stream()
+            favorite_list = [doc.to_dict() for doc in favorite_ref]
+
+            if favorite_list:
+                pose_ids = favorite_list[0]['pose']
+
+                pose_details = []
+                for pose_id in pose_ids:
+                    pose_query = db.collection('pose').where('pose_id', '==', pose_id).stream()
+                    for pose in pose_query:
+                        pose_details.append(pose.to_dict())
+
+                return {"favorites": pose_details}, 200
+            else:
+                return {"message": "No favorite poses found"}, 404
+        except Exception as e:
+            return {"message": "An error occurred: " + str(e)}, 500
+        
+    def post(self, uid):
+        try:
+            pose_id = request.json['pose_id']
+            favorite_ref = db.collection('favorite').where('uid', '==', uid).stream()
+            favorite_list = list(favorite_ref)
+            
+            if favorite_list:
+                doc_id = favorite_list[0].id 
+                pose_list = favorite_list[0].to_dict()['pose']
+                if pose_id not in pose_list:
+                    pose_list.append(pose_id)
+                    db.collection('favorite').document(doc_id).update({'pose': pose_list})
+                    return {"message": "Pose added to favorites"}, 200
+                else:
+                    return {"message": "Pose already in favorites"}, 400
+            else:
+                db.collection('favorite').add({'uid': uid, 'pose': [pose_id]})
+                return {"message": "Pose added to favorites"}, 201
+        except Exception as e:
+            return {"message": "An error occurred: " + str(e)}, 500
+
+    def delete(self, uid):
+        try:
+            pose_id = request.json['pose_id']
+            favorite_ref = db.collection('favorite').where('uid', '==', uid).stream()
+            favorite_list = list(favorite_ref)
+            
+            if favorite_list:
+                doc_id = favorite_list[0].id  
+                pose_list = favorite_list[0].to_dict()['pose']
+                if pose_id in pose_list:
+                    pose_list.remove(pose_id)
+                    db.collection('favorite').document(doc_id).update({'pose': pose_list})
+                    return {"message": "Pose removed from favorites"}, 200
+                else:
+                    return {"message": "Pose not found in favorites"}, 404
+            else:
+                return {"message": "No favorite poses found for user"}, 404
+        except Exception as e:
+            return {"message": "An error occurred: " + str(e)}, 500
+
 
 # Add resource to API
 api.add_resource(HelloWorld, '/')
+
+#Pose 
 api.add_resource(Poses, '/getAllYogaPose')
 api.add_resource(Pose, '/getYogaPose/<pose_id>')
+
+#Favorite
+api.add_resource(getFavorite, '/getFavoritePoses/<uid>')
+
 
 # Main driver function
 if __name__ == '__main__':
