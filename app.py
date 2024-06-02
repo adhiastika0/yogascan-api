@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_restful import Resource, Api
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, auth
 
 # Initialize Firebase app
 cred = credentials.Certificate("./serviceAccount.json")
@@ -22,6 +22,34 @@ class HelloWorld(Resource):
             return {"message": "Document added successfully"}, 201
         except Exception as e:
             return {"message": "An error occurred: " + str(e)}, 500
+
+class CreateAccount(Resource):
+    def post(self):
+        data = request.get_json()
+
+        email = data.get('email')
+        password = data.get('password')
+        username = data.get('username')
+
+
+        if not email or not password or not username:
+            return {"error": "Email, password, and username are required"}, 400
+
+        try:
+            # Buat pengguna baru
+            user = auth.create_user(
+                email=email,
+                password=password
+            )
+
+            db.collection('user').add({'uid': user.uid, 'username': username, 'profile_picture': 'test'})
+
+            return {
+                "message": "Successfully created new user",
+                "uid": user.uid
+            }, 201
+        except Exception as e:
+            return {"error": str(e)}, 400
 
 class Poses(Resource):
     def get(self):
@@ -116,6 +144,10 @@ class getFavorite(Resource):
 
 # Add resource to API
 api.add_resource(HelloWorld, '/')
+
+#Create Account
+api.add_resource(CreateAccount, '/create-account')
+
 
 #Pose 
 api.add_resource(Poses, '/getAllYogaPose')
