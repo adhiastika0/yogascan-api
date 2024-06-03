@@ -1,5 +1,5 @@
 import firebase_admin
-from firebase_admin import credentials, firestore, auth
+from firebase_admin import credentials, firestore
 
 # Initialize Firebase app
 cred = credentials.Certificate("./serviceAccount.json")

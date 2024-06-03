@@ -1,12 +1,18 @@
 from flask_restful import Resource
 from flask import request
 from firebase_setup import db
+from firebase_admin import auth
 from datetime import datetime
 import pytz
 
 class History(Resource):
-    def get(self, uid):
+    def get(self):
         try:
+            #get token from header and decode it to uid
+            token = request.headers.get('Authorization').split('Bearer ')[1]
+            decoded_token = auth.verify_id_token(token)
+            uid = decoded_token['uid']
+            
             # Retrieve documents from the 'history' collection where 'uid' matches the provided user ID
             history_ref = db.collection('history').where('uid', '==', uid).stream()
             history_list = [doc.to_dict() for doc in history_ref]
@@ -46,8 +52,12 @@ class History(Resource):
             # Return an error message if any exception occurs
             return {"message": "An error occurred: " + str(e)}, 500
 
-    def post(self, uid):
+    def post(self):
         try:
+            token = request.headers.get('Authorization').split('Bearer ')[1]
+            decoded_token = auth.verify_id_token(token)
+            uid = decoded_token['uid']
+            
             # Parse the date string from the request body and convert it to a datetime object
             date_str = request.json['date']
             date = datetime.fromisoformat(date_str.rstrip('Z')).replace(tzinfo=pytz.UTC)

@@ -10,21 +10,21 @@ from resources.history import History
 app = Flask(__name__)
 api = Api(app)
 
-#Create Account
+# Create Account
 api.add_resource(CreateAccount, '/signup')
 
-#Create Account
+# Login
 api.add_resource(Login, '/login')
 
-#Pose 
+# Pose 
 api.add_resource(Poses, '/poses')
 api.add_resource(Pose, '/pose/<pose_id>')
 
-#Favorite
-api.add_resource(getFavorite, '/favorite/<uid>')
+# Favorite
+api.add_resource(getFavorite, '/favorite')
 
-#History
-api.add_resource(History, '/history/<uid>')
+# History
+api.add_resource(History, '/history')
 
 # Main driver function
 if __name__ == '__main__':
