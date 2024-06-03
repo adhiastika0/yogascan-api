@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 from resources.create_account import CreateAccount
+from resources.login import Login
 from resources.poses import Poses, Pose
 from resources.favorites import getFavorite
 from resources.history import History
@@ -11,6 +12,9 @@ api = Api(app)
 
 #Create Account
 api.add_resource(CreateAccount, '/signup')
+
+#Create Account
+api.add_resource(Login, '/login')
 
 #Pose 
 api.add_resource(Poses, '/poses')
